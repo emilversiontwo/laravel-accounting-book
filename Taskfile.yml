@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+vars:
+  DOCKER_COMPOSE: "docker-compose.yaml"
+
+tasks:
+  artisan:
+    desc: example= task artisan -- migrate
+    cmds:
+      - docker compose --file {{.DOCKER_COMPOSE}} exec app php artisan {{.CLI_ARGS}}
+    silent: true
+
+  composer:
+    desc: example= task composer -- i
+    cmds:
+      - docker compose --file {{.DOCKER_COMPOSE}} exec app composer {{.CLI_ARGS}}
+    silent: true
+
+  setup:
+    desc: Use on first launch
+    silent: true
+    cmds:
+      - cp -n .env.example .env
+      - docker compose --file {{.DOCKER_COMPOSE}} build --no-cache
+      - docker compose --file {{.DOCKER_COMPOSE}} up --build -d --force-recreate --remove-orphans
+      - task: composer
+        vars: { CLI_ARGS: 'install' }
+      - task: artisan
+        vars: { CLI_ARGS: 'key:generate' }
+      - task: artisan
+        vars: { CLI_ARGS: 'migrate:fresh' }
+      - task: artisan
+        vars: { CLI_ARGS: 'db:seed' }
+
+  up:
+    silent: true
+    cmds:
+      - docker compose --file {{.DOCKER_COMPOSE}} down
+      - docker compose --file {{.DOCKER_COMPOSE}} up -d --force-recreate
+
+  down:
+    silent: true
+    cmds:
+      - docker compose --file {{.DOCKER_COMPOSE}} down
+
+  app-cheach-clear:
+    silent: true
+    aliases:
+      - 'appcc'
+    cmds:
+      - task: artisan
+        vars: { CLI_ARGS: 'optimize:clear' }
+      - task: artisan
+        vars: { CLI_ARGS: 'optimize' }
+
+  db-fresh-seed:
+    desc: a command for quickly executing the db fresh and db seed commands
+    silent: true
+    aliases:
+      - 'dbfs'
+    cmds:
+      - task: artisan
+        vars: { CLI_ARGS: 'migrate:fresh' }
+      - task: artisan
+        vars: { CLI_ARGS: 'db:seed' }

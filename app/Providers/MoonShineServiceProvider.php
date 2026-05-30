@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\MoonShine\Resources\AccountType\AccountTypeResource;
 use Illuminate\Support\ServiceProvider;
 use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
 use MoonShine\Laravel\DependencyInjection\MoonShine;
@@ -22,6 +23,7 @@ class MoonShineServiceProvider extends ServiceProvider
             ->resources([
                 MoonShineUserResource::class,
                 MoonShineUserRoleResource::class,
+                AccountTypeResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),

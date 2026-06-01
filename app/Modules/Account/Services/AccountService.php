@@ -94,8 +94,10 @@ class AccountService
 
         if (!empty($fillable)) {
             $account->fill($fillable);
-            if ($dto->parentAccountId == null) {
-                $account->parentAccount()->dissociate();
+            if (isset($dto->parentAccountId)) {
+                if ($dto->parentAccountId == null) {
+                    $account->parentAccount()->dissociate();
+                }
             }
             $account->save();
         }

@@ -2,31 +2,32 @@
 
 declare(strict_types=1);
 
-namespace App\MoonShine\Resources\AccountType\Pages;
+namespace App\MoonShine\Resources\Account\Pages;
 
-use App\Modules\AccountType\Enums\AccountTypeCategoryEnum;
-use App\Modules\AccountType\Enums\AccountTypeNormalBalanceSideEnum;
+use App\Models\Account;
+use App\Models\AccountType;
+use App\MoonShine\Resources\AccountType\AccountTypeResource;
+use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FormBuilderContract;
 use MoonShine\UI\Components\FormBuilder;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
-use App\MoonShine\Resources\AccountType\AccountTypeResource;
+use App\MoonShine\Resources\Account\AccountResource;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Fields\Checkbox;
-use MoonShine\UI\Fields\Enum;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Components\Layout\Box;
-use MoonShine\UI\Fields\Switcher;
+use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
 
 /**
- * @extends FormPage<AccountTypeResource>
+ * @extends FormPage<AccountResource>
  */
-class AccountTypeFormPage extends FormPage
+class AccountFormPage extends FormPage
 {
     /**
      * @return list<ComponentContract|FieldContract>
@@ -36,19 +37,34 @@ class AccountTypeFormPage extends FormPage
         return [
             Box::make([
                 ID::make(),
+                Select::make('Account Type', 'account_type_id')->options(function ($item) {
+                    $accountTypes = AccountType::query()->where('is_active', '=', true)->get();
+                    $result = [];
 
-                Text::make('Name', 'name')
-                    ->required(),
+                    foreach ($accountTypes as $accountType) {
+                        $result[$accountType->id] = $accountType->name;
+                    }
 
-                Enum::make('Category', 'category')
-                    ->attach(AccountTypeCategoryEnum::class),
+                    return $result;
+                }),
+                Select::make('Parent Account', 'parent_account_id')->options(function ($item) {
+                    $accounts = Account::query()
+                        ->where('is_active', '=', true)
+                        ->when((int)$this->getResource()->getItemID() > 0, function ($query) {
+                            $query->whereKeyNot($this->getResource()->getItemID());
+                        })
+                        ->get();
+                    $result = [];
 
-                Enum::make('Normal Balance Side', 'normal_balance_side')
-                    ->attach(AccountTypeNormalBalanceSideEnum::class),
+                    foreach ($accounts as $account) {
+                        $result[$account->id] = $account->name;
+                    }
 
-                Checkbox::make('Allow Negative Balance', 'allow_negative_balance'),
-
-                Checkbox::make('Is Active', 'is_active')->default(true),
+                    return $result;
+                })->nullable(),
+                Text::make('Code', 'code')->required(),
+                Text::make('Name', 'name')->required(),
+                Checkbox::make('Active', 'is_active')->default(true),
             ]),
         ];
     }

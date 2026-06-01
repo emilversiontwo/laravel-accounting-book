@@ -2,28 +2,27 @@
 
 declare(strict_types=1);
 
-namespace App\MoonShine\Resources\AccountType\Pages;
+namespace App\MoonShine\Resources\Account\Pages;
 
-use App\Modules\AccountType\Enums\AccountTypeCategoryEnum;
-use App\Modules\AccountType\Enums\AccountTypeNormalBalanceSideEnum;
+use App\Models\Account;
+use App\Models\AccountType;
 use MoonShine\Laravel\Pages\Crud\DetailPage;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\Contracts\UI\FieldContract;
-use App\MoonShine\Resources\AccountType\AccountTypeResource;
+use App\MoonShine\Resources\Account\AccountResource;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Fields\Checkbox;
-use MoonShine\UI\Fields\Enum;
 use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Switcher;
+use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
 
 /**
- * @extends DetailPage<AccountTypeResource>
+ * @extends DetailPage<AccountResource>
  */
-class AccountTypeDetailPage extends DetailPage
+class AccountDetailPage extends DetailPage
 {
     /**
      * @return list<FieldContract>
@@ -33,18 +32,33 @@ class AccountTypeDetailPage extends DetailPage
         return [
             ID::make(),
 
-            Text::make('Name', 'name')
-                ->required(),
+            Select::make('Account Type', 'account_type_id')->options(function ($item) {
+                $accountTypes = AccountType::query()->get();
+                $result = [];
 
-            Enum::make('Category', 'category')
-                ->attach(AccountTypeCategoryEnum::class),
+                foreach ($accountTypes as $accountType) {
+                    $result[$accountType->id] = $accountType->name;
+                }
 
-            Enum::make('Normal Balance Side', 'normal_balance_side')
-                ->attach(AccountTypeNormalBalanceSideEnum::class),
+                return $result;
+            }),
 
-            Checkbox::make('Allow Negative Balance', 'allow_negative_balance'),
+            Select::make('Parent Account', 'parent_account_id')->options(function ($item) {
+                $accounts = Account::query()->get();
+                $result = [];
 
-            Checkbox::make('Is Active', 'is_active'),
+                foreach ($accounts as $account) {
+                    $result[$account->id] = $account->name;
+                }
+
+                return $result;
+            })->nullable(),
+
+            Text::make('Code', 'code'),
+
+            Text::make('Name', 'name'),
+
+            Checkbox::make('Active', 'is_active'),
         ];
     }
 

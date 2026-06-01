@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\MoonShine\Resources\AccountType\Pages;
+namespace App\MoonShine\Resources\Account\Pages;
 
-use App\Modules\AccountType\Enums\AccountTypeCategoryEnum;
 use MoonShine\Contracts\UI\ActionButtonContract;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Contracts\UI\ComponentContract;
@@ -12,18 +11,17 @@ use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\QueryTags\QueryTag;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
-use MoonShine\UI\Fields\Enum;
 use MoonShine\UI\Fields\ID;
-use App\MoonShine\Resources\AccountType\AccountTypeResource;
+use App\MoonShine\Resources\Account\AccountResource;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
 
 /**
- * @extends IndexPage<AccountTypeResource>
+ * @extends IndexPage<AccountResource>
  */
-class AccountTypeIndexPage extends IndexPage
+class AccountIndexPage extends IndexPage
 {
     protected bool $isLazy = true;
 
@@ -35,10 +33,7 @@ class AccountTypeIndexPage extends IndexPage
         return [
             ID::make(),
 
-            Text::make('Name', 'name'),
-
-            Enum::make('Category', 'category')
-                ->attach(AccountTypeCategoryEnum::class),
+            Text::make('name'),
         ];
     }
 

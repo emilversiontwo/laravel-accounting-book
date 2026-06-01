@@ -82,30 +82,28 @@ class AccountTypeResource extends CrudResource
     {
         $data = request()->all();
 
-        if ($this->getItemID() !== null) {
+        if ($this->getItemID() !== null && $this->getItemID() !== 0) {
             $dto = new AccountTypeUpdateDto([
                 'id' => (int) $this->getItemID(),
                 'name' => $data['name'] ?? null,
                 'category' => AccountTypeCategoryEnum::fromValue($data['category'] ?? null),
-                'normalBalanceSide' => AccountTypeNormalBalanceSideEnum::fromValue($data['normalBalanceSide'] ?? null),
-                'allowNegativeBalance' => ($data['allowNegativeBalance'] ?? '0') === '1',
-                'isActive' => ($data['isActive'] ?? '0') === '1',
+                'normalBalanceSide' => AccountTypeNormalBalanceSideEnum::fromValue($data['normal_balance_side'] ?? null),
+                'allowNegativeBalance' => ($data['allow_negative_balance'] ?? '0') === '1',
+                'isActive' => ($data['is_active'] ?? '0') === '1',
             ]);
 
             $accountType = $this->accountTypeService->update($dto);
+        } else {
+            $dto = new AccountTypeStoreDto([
+                'name' => $data['name'] ?? null,
+                'category' => AccountTypeCategoryEnum::fromValue($data['category'] ?? null),
+                'normalBalanceSide' => AccountTypeNormalBalanceSideEnum::fromValue($data['normal_balance_side'] ?? null),
+                'allowNegativeBalance' => ($data['allow_negative_balance'] ?? '0') === '1',
+                'isActive' => ($data['is_active'] ?? '0') === '1',
+            ]);
 
-            return $this->getCaster()->cast($accountType);
+            $accountType = $this->accountTypeService->store($dto);
         }
-
-        $dto = new AccountTypeStoreDto([
-            'name' => $data['name'] ?? null,
-            'category' => AccountTypeCategoryEnum::fromValue($data['category'] ?? null),
-            'normalBalanceSide' => AccountTypeNormalBalanceSideEnum::fromValue($data['normalBalanceSide'] ?? null),
-            'allowNegativeBalance' => ($data['allowNegativeBalance'] ?? '0') === '1',
-            'isActive' => ($data['isActive'] ?? '0') === '1',
-        ]);
-
-        $accountType = $this->accountTypeService->store($dto);
 
         return $this->getCaster()->cast($accountType);
     }
@@ -127,6 +125,11 @@ class AccountTypeResource extends CrudResource
 
     public function massDelete(array $ids): void
     {
-        //
+        foreach ($ids as $id) {
+            $dto = new AccountTypeDto([
+                'id' => (int) $id,
+            ]);
+            $this->accountTypeService->destroy($dto);
+        }
     }
 }

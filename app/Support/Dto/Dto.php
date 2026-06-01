@@ -29,6 +29,23 @@ abstract class Dto implements DtoInterface
         return get_object_vars($this);
     }
 
+    public function toSneakedCaseArray(): array
+    {
+        $result = [];
+
+        foreach (get_object_vars($this) as $key => $value) {
+            $result[$this->camelCaseToSnakeCase($key)] = $value;
+        }
+
+        return $result;
+    }
+
+    private function camelCaseToSnakeCase(string $camelCase): string {
+        $pattern = '/(?<=\\w)(?=[A-Z])|(?<=[a-z])(?=[0-9])/';
+        $snakeCase = preg_replace($pattern, '_', $camelCase);
+        return strtolower($snakeCase);
+    }
+
 
 
     private function snakeCaseToCamelCase(string $string): string

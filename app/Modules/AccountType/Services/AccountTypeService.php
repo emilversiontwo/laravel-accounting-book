@@ -10,6 +10,7 @@ use App\Modules\AccountType\Dto\AccountTypeDto;
 use App\Modules\AccountType\Dto\AccountTypeStoreDto;
 use App\Modules\AccountType\Dto\AccountTypeUpdateDto;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class AccountTypeService
 {
@@ -62,11 +63,12 @@ class AccountTypeService
         $accountType = $this->getAccountTypeOrFail($dto->id);
 
         $fillable = array_filter([
-            ...$dto->toArray(),
+            ...$dto->toSneakedCaseArray(),
         ], fn ($value) => $value !== null);
 
         if (!empty($fillable)) {
-            $accountType->fill($fillable)->save();
+            $accountType->fill($fillable);
+            $accountType->save();
         }
 
         return $accountType;
@@ -93,10 +95,10 @@ class AccountTypeService
      */
     protected function getAccountTypeOrFail(int $id): AccountType
     {
-        $accountType = AccountType::query()->find($id);
-
-        if ($accountType === null) {
-            throw NotFoundException::make('Account Type with id -' . $id . ' not found');
+        try {
+            $accountType = AccountType::query()->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            throw NotFoundException::make('Account Type with id -' . $id . ' not found', $e);
         }
 
         return $accountType;

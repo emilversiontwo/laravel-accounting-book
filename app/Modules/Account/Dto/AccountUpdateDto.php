@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Account\Dto;
 
-class AccountUpdateDto extends AccountDto
+use App\Support\Dto\Dto;
+
+class AccountUpdateDto extends Dto
 {
+    public int $id;
+
     public ?int $accountTypeId = null;
 
     public ?int $parentAccountId;

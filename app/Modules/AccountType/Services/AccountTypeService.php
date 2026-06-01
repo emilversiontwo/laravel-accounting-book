@@ -68,9 +68,11 @@ class AccountTypeService
         /** @var AccountType $accountType */
         $accountType = $this->resolveOrFail(AccountType::class, $dto->id);
 
-        $fillable = array_filter([
-            ...$dto->toSneakedCaseArray(),
-        ], fn ($value) => $value !== null);
+        $fillable = array_filter(
+            $dto->toSneakedCaseArray(),
+            fn ($value, $key) => $key !== 'id' && $value !== null,
+            ARRAY_FILTER_USE_BOTH
+        );
 
         if (!empty($fillable)) {
             $accountType->fill($fillable);

@@ -22,4 +22,12 @@ enum AccountTypeNormalBalanceSideEnum: string
     {
         return $this->value;
     }
+
+    public function toString(): ?string
+    {
+        return match ($this) {
+            self::Debit => 'Debit',
+            self::Credit => 'Credit',
+        };
+    }
 }

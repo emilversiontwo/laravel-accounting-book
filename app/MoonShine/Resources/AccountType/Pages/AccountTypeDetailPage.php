@@ -12,6 +12,7 @@ use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\Contracts\UI\FieldContract;
 use App\MoonShine\Resources\AccountType\AccountTypeResource;
 use MoonShine\Support\ListOf;
+use MoonShine\UI\Fields\Checkbox;
 use MoonShine\UI\Fields\Enum;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Switcher;
@@ -38,12 +39,12 @@ class AccountTypeDetailPage extends DetailPage
             Enum::make('Category', 'category')
                 ->attach(AccountTypeCategoryEnum::class),
 
-            Enum::make('Normal Balance Side', 'normalBalanceSide')
+            Enum::make('Normal Balance Side', 'normal_balance_side')
                 ->attach(AccountTypeNormalBalanceSideEnum::class),
 
-            Switcher::make('Allow Negative Balance', 'allowNegativeBalance'),
+            Checkbox::make('Allow Negative Balance', 'allow_negative_balance'),
 
-            Switcher::make('Is Active', 'isActive')->default(true),
+            Checkbox::make('Is Active', 'is_active'),
         ];
     }
 

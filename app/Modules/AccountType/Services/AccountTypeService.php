@@ -7,12 +7,16 @@ namespace App\Modules\AccountType\Services;
 use App\Exceptions\NotFoundException;
 use App\Models\AccountType;
 use App\Modules\AccountType\Dto\AccountTypeDto;
+use App\Modules\AccountType\Dto\AccountTypeMassDestroyDto;
 use App\Modules\AccountType\Dto\AccountTypeStoreDto;
 use App\Modules\AccountType\Dto\AccountTypeUpdateDto;
+use App\Support\Traits\ResolvesModelsTrait;
 use Illuminate\Database\Eloquent\Collection;
 
 class AccountTypeService
 {
+    use ResolvesModelsTrait;
+
     /**
      * Get all Account Types
      * @return Collection
@@ -28,7 +32,9 @@ class AccountTypeService
      */
     public function show(AccountTypeDto $dto): AccountType
     {
-        return $this->getAccountTypeOrFail($dto->id);
+        /** @var AccountType $accountType */
+        $accountType = $this->resolveOrFail(AccountType::class, $dto->id);
+        return $accountType;
     }
 
     /**
@@ -59,14 +65,18 @@ class AccountTypeService
      */
     public function update(AccountTypeUpdateDto $dto): AccountType
     {
-        $accountType = $this->getAccountTypeOrFail($dto->id);
+        /** @var AccountType $accountType */
+        $accountType = $this->resolveOrFail(AccountType::class, $dto->id);
 
-        $fillable = array_filter([
-            ...$dto->toArray(),
-        ], fn ($value) => $value !== null);
+        $fillable = array_filter(
+            $dto->toSneakedCaseArray(),
+            fn ($value, $key) => $key !== 'id' && $value !== null,
+            ARRAY_FILTER_USE_BOTH
+        );
 
         if (!empty($fillable)) {
-            $accountType->fill($fillable)->save();
+            $accountType->fill($fillable);
+            $accountType->save();
         }
 
         return $accountType;
@@ -80,25 +90,19 @@ class AccountTypeService
      */
     public function destroy(AccountTypeDto $dto): void
     {
-        $accountType = $this->getAccountTypeOrFail($dto->id);
+        /** @var AccountType $accountType */
+        $accountType = $this->resolveOrFail(AccountType::class, $dto->id);
 
         $accountType->delete();
     }
 
     /**
-     * Find Account Type by id or throw
-     * @param int $id
-     * @return AccountType
-     * @throws NotFoundException
+     * Destroy many Account Types
+     * @param AccountTypeMassDestroyDto $dto
+     * @return void
      */
-    protected function getAccountTypeOrFail(int $id): AccountType
+    public function massDestroy(AccountTypeMassDestroyDto $dto): void
     {
-        $accountType = AccountType::query()->find($id);
-
-        if ($accountType === null) {
-            throw NotFoundException::make('Account Type with id -' . $id . ' not found');
-        }
-
-        return $accountType;
+        AccountType::query()->whereIn('id', $dto->ids)->delete();
     }
 }

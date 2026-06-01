@@ -7,14 +7,17 @@ namespace App\MoonShine\Resources\AccountType;
 use App\Exceptions\NotFoundException;
 use App\Models\AccountType;
 use App\Modules\AccountType\Dto\AccountTypeDto;
+use App\Modules\AccountType\Dto\AccountTypeMassDestroyDto;
 use App\Modules\AccountType\Dto\AccountTypeStoreDto;
 use App\Modules\AccountType\Dto\AccountTypeUpdateDto;
 use App\Modules\AccountType\Enums\AccountTypeCategoryEnum;
 use App\Modules\AccountType\Enums\AccountTypeNormalBalanceSideEnum;
+use App\Modules\AccountType\Mappers\AccountTypeRequestMapper;
 use App\Modules\AccountType\Services\AccountTypeService;
 use App\MoonShine\Resources\AccountType\Pages\AccountTypeIndexPage;
 use App\MoonShine\Resources\AccountType\Pages\AccountTypeFormPage;
 use App\MoonShine\Resources\AccountType\Pages\AccountTypeDetailPage;
+use Illuminate\Database\Eloquent\Model;
 use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
 use MoonShine\Crud\Resources\CrudResource;
 use MoonShine\Contracts\Core\DependencyInjection\FieldsContract;
@@ -62,9 +65,7 @@ class AccountTypeResource extends CrudResource
 
     public function findItem(bool $orFail = false): ?DataWrapperContract
     {
-        $dto = new AccountTypeDto([
-            'id' => (int) $this->getItemID(),
-        ]);
+        $dto = AccountTypeRequestMapper::toDto($this->getItemID());
 
         try {
             $accountType = $this->accountTypeService->show($dto);
@@ -80,41 +81,20 @@ class AccountTypeResource extends CrudResource
      */
     public function save(DataWrapperContract $item, ?FieldsContract $fields = null): DataWrapperContract
     {
-        $data = request()->all();
+        $dto = $item->getOriginal() instanceof Model
+            ? AccountTypeRequestMapper::toUpdateDto(request(), $this->getItemID())
+            : AccountTypeRequestMapper::toStoreDto(request());
 
-        if ($this->getItemID() !== null) {
-            $dto = new AccountTypeUpdateDto([
-                'id' => (int) $this->getItemID(),
-                'name' => $data['name'] ?? null,
-                'category' => AccountTypeCategoryEnum::fromValue($data['category'] ?? null),
-                'normalBalanceSide' => AccountTypeNormalBalanceSideEnum::fromValue($data['normalBalanceSide'] ?? null),
-                'allowNegativeBalance' => ($data['allowNegativeBalance'] ?? '0') === '1',
-                'isActive' => ($data['isActive'] ?? '0') === '1',
-            ]);
-
-            $accountType = $this->accountTypeService->update($dto);
-
-            return $this->getCaster()->cast($accountType);
-        }
-
-        $dto = new AccountTypeStoreDto([
-            'name' => $data['name'] ?? null,
-            'category' => AccountTypeCategoryEnum::fromValue($data['category'] ?? null),
-            'normalBalanceSide' => AccountTypeNormalBalanceSideEnum::fromValue($data['normalBalanceSide'] ?? null),
-            'allowNegativeBalance' => ($data['allowNegativeBalance'] ?? '0') === '1',
-            'isActive' => ($data['isActive'] ?? '0') === '1',
-        ]);
-
-        $accountType = $this->accountTypeService->store($dto);
+        $accountType = $item->getOriginal() instanceof Model
+            ? $this->accountTypeService->update($dto)
+            : $this->accountTypeService->store($dto);
 
         return $this->getCaster()->cast($accountType);
     }
 
     public function delete(DataWrapperContract $item, ?FieldsContract $fields = null): bool
     {
-        $dto = new AccountTypeDto([
-            'id' => (int) $this->getItemID(),
-        ]);
+        $dto = AccountTypeRequestMapper::toDto($this->getItemID());
 
         try {
             $this->accountTypeService->destroy($dto);
@@ -127,6 +107,8 @@ class AccountTypeResource extends CrudResource
 
     public function massDelete(array $ids): void
     {
-        //
+        $dto = AccountTypeRequestMapper::toMassDestroyDto($ids);
+
+        $this->accountTypeService->massDestroy($dto);
     }
 }

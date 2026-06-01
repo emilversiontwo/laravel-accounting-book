@@ -2,31 +2,28 @@
 
 declare(strict_types=1);
 
-namespace App\MoonShine\Resources\AccountType\Pages;
+namespace App\MoonShine\Resources\Account\Pages;
 
-use App\Modules\AccountType\Enums\AccountTypeCategoryEnum;
-use MoonShine\Contracts\UI\ActionButtonContract;
-use MoonShine\Laravel\Pages\Crud\IndexPage;
+use App\Models\Account;
+use App\Models\AccountType;
+use MoonShine\Laravel\Pages\Crud\DetailPage;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\Contracts\UI\FieldContract;
-use MoonShine\Laravel\QueryTags\QueryTag;
-use MoonShine\UI\Components\Metrics\Wrapped\Metric;
-use MoonShine\UI\Fields\Enum;
-use MoonShine\UI\Fields\ID;
-use App\MoonShine\Resources\AccountType\AccountTypeResource;
+use App\MoonShine\Resources\Account\AccountResource;
 use MoonShine\Support\ListOf;
+use MoonShine\UI\Fields\Checkbox;
+use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
 
 /**
- * @extends IndexPage<AccountTypeResource>
+ * @extends DetailPage<AccountResource>
  */
-class AccountTypeIndexPage extends IndexPage
+class AccountDetailPage extends DetailPage
 {
-    protected bool $isLazy = true;
-
     /**
      * @return list<FieldContract>
      */
@@ -35,43 +32,24 @@ class AccountTypeIndexPage extends IndexPage
         return [
             ID::make(),
 
+            Select::make('Account Type', 'account_type_id')
+                ->options(fn ($_) => AccountType::query()->pluck('name', 'id')->toArray()),
+
+            Select::make('Parent Account', 'parent_account_id')
+                ->options(fn ($_) => Account::query()->pluck('name', 'id')->toArray())
+                ->nullable(),
+
+            Text::make('Code', 'code'),
+
             Text::make('Name', 'name'),
 
-            Enum::make('Category', 'category')
-                ->attach(AccountTypeCategoryEnum::class),
+            Checkbox::make('Active', 'is_active'),
         ];
     }
 
-    /**
-     * @return ListOf<ActionButtonContract>
-     */
     protected function buttons(): ListOf
     {
         return parent::buttons();
-    }
-
-    /**
-     * @return list<FieldContract>
-     */
-    protected function filters(): iterable
-    {
-        return [];
-    }
-
-    /**
-     * @return list<QueryTag>
-     */
-    protected function queryTags(): array
-    {
-        return [];
-    }
-
-    /**
-     * @return list<Metric>
-     */
-    protected function metrics(): array
-    {
-        return [];
     }
 
     /**
@@ -79,7 +57,7 @@ class AccountTypeIndexPage extends IndexPage
      *
      * @return TableBuilder
      */
-    protected function modifyListComponent(ComponentContract $component): ComponentContract
+    protected function modifyDetailComponent(ComponentContract $component): ComponentContract
     {
         return $component;
     }

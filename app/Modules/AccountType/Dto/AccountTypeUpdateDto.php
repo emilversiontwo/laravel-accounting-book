@@ -8,8 +8,10 @@ use App\Modules\AccountType\Enums\AccountTypeCategoryEnum;
 use App\Modules\AccountType\Enums\AccountTypeNormalBalanceSideEnum;
 use App\Support\Dto\Dto;
 
-class AccountTypeUpdateDto extends AccountTypeDto
+class AccountTypeUpdateDto extends Dto
 {
+    public int $id;
+
     public ?string $name = null;
 
     public ?AccountTypeCategoryEnum $category = null;

@@ -32,4 +32,15 @@ enum AccountTypeCategoryEnum: string
     {
         return $this->value;
     }
+
+    public function toString(): ?string
+    {
+        return match ($this) {
+            self::Asset => 'Asset',
+            self::Liability => 'Liability',
+            self::Equity => 'Equity',
+            self::Revenue => 'Revenue',
+            self::Expense => 'Expense',
+        };
+    }
 }

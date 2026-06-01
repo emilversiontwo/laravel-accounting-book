@@ -8,14 +8,18 @@ use App\Exceptions\NotFoundException;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Modules\Account\Dto\AccountDto;
+use App\Modules\Account\Dto\AccountMassDestroyDto;
 use App\Modules\Account\Dto\AccountStoreDto;
 use App\Modules\Account\Dto\AccountUpdateDto;
+use App\Support\Traits\ResolvesModelsTrait;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class AccountService
 {
+    use ResolvesModelsTrait;
+
     /**
      * Get all Accounts
      * @return Collection
@@ -31,7 +35,9 @@ class AccountService
      */
     public function show(AccountDto $dto): Account
     {
-        return $this->getAccountOrFail($dto->id);
+        /** @var Account $account */
+        $account = $this->resolveOrFail(Account::class, $dto->id);
+        return $account;
     }
 
     /**
@@ -42,18 +48,17 @@ class AccountService
      */
     public function store(AccountStoreDto $dto): Account
     {
-        try {
-            $accountType = AccountType::query()->findOrFail($dto->accountTypeId);
-        } catch (ModelNotFoundException $e) {
-            throw NotFoundException::make('Account Type with id -' . $dto->accountTypeId . ' not found', $e);
-        }
+        /** @var AccountType $accountType */
+        $accountType = $this->resolveOrFail(AccountType::class, $dto->accountTypeId);
 
         $account = new Account();
 
         $account->accountType()->associate($accountType);
 
         if ($dto->parentAccountId !== null) {
-            $parentAccount = $this->getAccountOrFail($dto->parentAccountId);
+
+            /** @var Account $parentAccount */
+            $parentAccount = $this->resolveOrFail(Account::class ,$dto->parentAccountId);
             $account->parentAccount()->associate($parentAccount);
         }
 
@@ -74,23 +79,20 @@ class AccountService
      */
     public function update(AccountUpdateDto $dto): Account
     {
-        if (isset($dto->parentAccountId)) {
-            if (!Account::query()->whereId($dto->parentAccountId)->exists()) {
-                throw NotFoundException::make('Account with id -' . $dto->parentAccountId . ' not found');
-            }
+        if (isset($dto->parentAccountId)){
+            $this->resolveOrFail(Account::class, $dto->parentAccountId);
         }
 
-        if ($dto->accountTypeId !== null) {
-            if (!AccountType::query()->whereId($dto->accountTypeId)->exists()) {
-                throw NotFoundException::make('Account Type with id -' . $dto->accountTypeId . ' not found');
-            }
-        }
+        $this->resolveOrFail(AccountType::class, $dto->accountTypeId);
 
-        $account = $this->getAccountOrFail($dto->id);
+        /** @var Account $account */
+        $account = $this->resolveOrFail(Account::class, $dto->id);
 
-        $fillable = array_filter([
-            ...$dto->toSneakedCaseArray(),
-        ], fn ($value) => $value !== null);
+        $fillable = array_filter(
+            $dto->toSneakedCaseArray(),
+            fn ($value, $key) => $key !== 'id' && $value !== null,
+            ARRAY_FILTER_USE_BOTH
+        );
 
         if (!empty($fillable)) {
             $account->fill($fillable);
@@ -113,25 +115,19 @@ class AccountService
      */
     public function destroy(AccountDto $dto): void
     {
-        $account = $this->getAccountOrFail($dto->id);
+        /** @var Account $account */
+        $account = $this->resolveOrFail(Account::class, $dto->id);
 
         $account->delete();
     }
 
     /**
-     * Find Account by id or throw
-     * @param int $id
-     * @return Account
-     * @throws NotFoundException
+     * Delete Accounts
+     * @param AccountMassDestroyDto $dto
+     * @return void
      */
-    protected function getAccountOrFail(int $id): Account
+    public function massDestroy(AccountMassDestroyDto $dto): void
     {
-        try {
-            $account = Account::query()->findOrFail($id);
-        } catch (ModelNotFoundException $e) {
-            throw NotFoundException::make('Account with id -' . $id . ' not found', $e);
-        }
-
-        return $account;
+        Account::query()->whereIn('id', $dto->ids)->delete();
     }
 }

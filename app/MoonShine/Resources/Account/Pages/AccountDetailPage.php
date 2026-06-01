@@ -32,27 +32,12 @@ class AccountDetailPage extends DetailPage
         return [
             ID::make(),
 
-            Select::make('Account Type', 'account_type_id')->options(function ($item) {
-                $accountTypes = AccountType::query()->get();
-                $result = [];
+            Select::make('Account Type', 'account_type_id')
+                ->options(fn ($_) => AccountType::query()->pluck('name', 'id')->toArray()),
 
-                foreach ($accountTypes as $accountType) {
-                    $result[$accountType->id] = $accountType->name;
-                }
-
-                return $result;
-            }),
-
-            Select::make('Parent Account', 'parent_account_id')->options(function ($item) {
-                $accounts = Account::query()->get();
-                $result = [];
-
-                foreach ($accounts as $account) {
-                    $result[$account->id] = $account->name;
-                }
-
-                return $result;
-            })->nullable(),
+            Select::make('Parent Account', 'parent_account_id')
+                ->options(fn ($_) => Account::query()->pluck('name', 'id')->toArray())
+                ->nullable(),
 
             Text::make('Code', 'code'),
 

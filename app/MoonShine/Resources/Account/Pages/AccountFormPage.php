@@ -37,31 +37,20 @@ class AccountFormPage extends FormPage
         return [
             Box::make([
                 ID::make(),
-                Select::make('Account Type', 'account_type_id')->options(function ($item) {
-                    $accountTypes = AccountType::query()->where('is_active', '=', true)->get();
-                    $result = [];
-
-                    foreach ($accountTypes as $accountType) {
-                        $result[$accountType->id] = $accountType->name;
-                    }
-
-                    return $result;
-                }),
-                Select::make('Parent Account', 'parent_account_id')->options(function ($item) {
-                    $accounts = Account::query()
+                Select::make('Account Type', 'account_type_id')
+                    ->options(fn ($_) => AccountType::query()
+                        ->where('is_active', '=', true)
+                        ->pluck('name', 'id')
+                        ->toArray()),
+                Select::make('Parent Account', 'parent_account_id')
+                    ->options(fn ($_) => Account::query()
                         ->where('is_active', '=', true)
                         ->when((int)$this->getResource()->getItemID() > 0, function ($query) {
                             $query->whereKeyNot($this->getResource()->getItemID());
                         })
-                        ->get();
-                    $result = [];
-
-                    foreach ($accounts as $account) {
-                        $result[$account->id] = $account->name;
-                    }
-
-                    return $result;
-                })->nullable(),
+                        ->pluck('name', 'id')
+                        ->toArray())
+                    ->nullable()->default(null),
                 Text::make('Code', 'code')->required(),
                 Text::make('Name', 'name')->required(),
                 Checkbox::make('Active', 'is_active')->default(true),
@@ -81,7 +70,32 @@ class AccountFormPage extends FormPage
 
     protected function rules(DataWrapperContract $item): array
     {
-        return [];
+        return [
+            'account_type_id' => [
+                'required',
+                'exists:account_types,id',
+            ],
+            'parent_account_id' => [
+                'sometimes',
+                'nullable',
+                'exists:accounts,id',
+            ],
+            'code' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:accounts,name',
+            ],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+            'is_active' => [
+                'required',
+                'boolean',
+            ],
+        ];
     }
 
     /**

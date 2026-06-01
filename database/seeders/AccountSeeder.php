@@ -13,7 +13,7 @@ class AccountSeeder extends Seeder
         Account::query()->truncate();
 
         $account = new Account();
-        $account->accountType()->associate(AccountType::query()->first());
+        $account->accountType()->associate(AccountType::query()->firstOrFail());
         $account->code = '60';
         $account->name = 'SomeTestAccount';
         $account->is_active = true;
@@ -21,7 +21,7 @@ class AccountSeeder extends Seeder
         $account->save();
 
         $account = new Account();
-        $account->accountType()->associate(AccountType::query()->first());
+        $account->accountType()->associate(AccountType::query()->firstOrFail());
         $account->code = '70';
         $account->name = 'SomeSecondTestAccount';
         $account->is_active = false;

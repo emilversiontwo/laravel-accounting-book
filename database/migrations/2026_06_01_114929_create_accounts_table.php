@@ -16,6 +16,8 @@ return new class extends Migration {
             $table->boolean('is_active');
             $table->timestamps();
             $table->foreign('account_type_id')->references('id')->on('account_types');
+            $table->index('parent_account_id');
+            $table->index(['account_type_id', 'is_active']);
         });
     }
 

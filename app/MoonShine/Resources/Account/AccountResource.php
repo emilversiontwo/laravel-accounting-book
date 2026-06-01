@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\Account;
 
 use App\Exceptions\NotFoundException;
+use App\Models\Account;
 use App\Modules\Account\Dto\AccountDto;
+use App\Modules\Account\Dto\AccountMassDestroyDto;
 use App\Modules\Account\Dto\AccountStoreDto;
 use App\Modules\Account\Dto\AccountUpdateDto;
+use App\Modules\Account\Mappers\AccountRequestMapper;
 use App\Modules\Account\Services\AccountService;
 use App\MoonShine\Resources\Account\Pages\AccountIndexPage;
 use App\MoonShine\Resources\Account\Pages\AccountFormPage;
 use App\MoonShine\Resources\Account\Pages\AccountDetailPage;
 
+use Illuminate\Database\Eloquent\Model;
 use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
 use MoonShine\Crud\Resources\CrudResource;
 use MoonShine\Contracts\Core\DependencyInjection\FieldsContract;
@@ -72,42 +76,25 @@ class AccountResource extends CrudResource
         return $this->getCaster()->cast($account);
     }
 
+    /**
+     * @throws NotFoundException
+     */
     public function save(DataWrapperContract $item, ?FieldsContract $fields = null): DataWrapperContract
     {
-        $data = request()->all();
+        $dto = $item->getOriginal() instanceof Model
+            ? AccountRequestMapper::toUpdateDto(request(), $this->getItemID())
+            : AccountRequestMapper::toStoreDto(request());
 
-        if ($this->getItemID() !== null && $this->getItemID() !== 0) {
-
-            $dto = new AccountUpdateDto([
-                'id' => (int) $this->getItemID(),
-                'accountTypeId' => (int) $data['account_type_id'],
-                'parentAccountId' => (int) $data['parent_account_id'] > 0 ? (int) $data['parent_account_id'] : null,
-                'code' => $data['code'],
-                'name' => $data['name'],
-                'isActive' => ($data['is_active'] ?? '0') === '1',
-            ]);
-
-            $account = $this->accountService->update($dto);
-        } else {
-            $dto = new AccountStoreDto([
-                'accountTypeId' => (int) $data['account_type_id'],
-                'parentAccountId' => (int) $data['parent_account_id'] > 0 ? (int) $data['parent_account_id'] : null,
-                'code' => $data['code'],
-                'name' => $data['name'],
-                'isActive' => ($data['is_active'] ?? '0') === '1',
-            ]);
-
-            $account = $this->accountService->store($dto);
-        }
+        $account = $item->getOriginal() instanceof Model
+            ? $this->accountService->update($dto)
+            : $this->accountService->store($dto);
 
         return $this->getCaster()->cast($account);
     }
 
     public function delete(DataWrapperContract $item, ?FieldsContract $fields = null): bool
     {
-        $dto = new AccountDto([
-            'id' => (int) $this->getItemID(),
-        ]);
+        $dto = AccountRequestMapper::toDto($this->getItemID());
 
         try {
             $this->accountService->destroy($dto);
@@ -120,11 +107,8 @@ class AccountResource extends CrudResource
 
     public function massDelete(array $ids): void
     {
-        foreach ($ids as $id) {
-            $dto = new AccountDto([
-                'id' => (int) $id,
-            ]);
-            $this->accountService->destroy($dto);
-        }
+        $dto = AccountRequestMapper::toMassDestroyDto($ids);
+
+        $this->accountService->massDestroy($dto);
     }
 }

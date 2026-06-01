@@ -6,6 +6,7 @@ namespace App\MoonShine\Resources\AccountType\Pages;
 
 use App\Modules\AccountType\Enums\AccountTypeCategoryEnum;
 use App\Modules\AccountType\Enums\AccountTypeNormalBalanceSideEnum;
+use Illuminate\Validation\Rule;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FormBuilderContract;
@@ -65,7 +66,13 @@ class AccountTypeFormPage extends FormPage
 
     protected function rules(DataWrapperContract $item): array
     {
-        return [];
+        return [
+            'name' => ['required', 'string'],
+            'category' => ['required', 'string', Rule::enum(AccountTypeCategoryEnum::class)],
+            'normal_balance_side' => ['required', 'string', Rule::enum(AccountTypeNormalBalanceSideEnum::class)],
+            'allow_negative_balance' => ['required', 'boolean'],
+            'is_active' => ['required', 'boolean'],
+        ];
     }
 
     /**

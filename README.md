@@ -1,12 +1,304 @@
-Возможные ошибки
-tempnam(): file created in the system's temporary directory
-фикс: cd .. && sudo chmod -R 777 laravel-accounting-book && cd laravel-accounting-book
+# Laravel Accounting Book
 
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+Минимальная учебная реализация **бухгалтерской книги (Ledger)** на Laravel + MoonShine.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Проект показывает, как устроен учет по принципу **двойной записи**:
+
+- **Account** - счет
+- **Transaction** - транзакция
+- **JournalEntry** - проводка
+- **AccountType** - тип счета
+
+Главная идея проекта - не построить “идеальную ERP”, а собрать **понятный MVP**, который уже умеет работать как маленькая бухгалтерская система.
+
+---
+
+## Что умеет проект
+
+- CRUD для типов счетов
+- CRUD для счетов
+- CRUD для транзакций
+- CRUD для проводок
+- Привязка проводок к транзакции
+- Статусы транзакций: `draft` / `posted`
+- Экспорт списка транзакций в CSV / Excel
+- Простой отчет **“Оборотно-сальдовая ведомость”**
+
+---
+
+## Это MVP
+
+Проект сделан как **минимальная рабочая версия**, поэтому здесь нет лишнего усложнения.
+
+### Что специально не добавлялось
+- хранение балансов в отдельной таблице
+- асинхронные пересчеты
+- сложная бухгалтерская аналитика
+- API
+- роли и права доступа
+- полноценный журнал проводок уровня enterprise
+
+Идея в том, чтобы проект было:
+- легко понять,
+- легко поднять,
+- легко показать на защите,
+- легко доработать дальше.
+
+---
+
+## Стек
+
+- PHP 8+
+- Laravel 12+
+- PostgreSQL
+- MoonShine
+- Composer
+- Docker
+- Taskfile(требует установки) - [https://taskfile.dev/docs/installation](https://taskfile.dev/docs/installation)
+- Рекомендуемая ОС - Linux.
+
+---
+
+## Сущности
+
+### `AccountType`
+Тип счета.
+
+Поля:
+- `name`
+- `category`
+- `normal_balance_side`
+- `allow_negative_balance`
+- `is_active`
+
+### `Account`
+Счет.
+
+Поля:
+- `account_type_id`
+- `parent_account_id`
+- `code`
+- `name`
+- `is_active`
+
+### `Transaction`
+Транзакция.
+
+Поля:
+- `transaction_date`
+- `description`
+- `status`
+
+### `JournalEntry`
+Проводка.
+
+Поля:
+- `transaction_id`
+- `account_id`
+- `side`
+- `amount`
+
+---
+
+## Как работает логика
+
+Транзакция создается в статусе `draft`.
+
+Дальше к ней добавляются проводки:
+- `debit`
+- `credit`
+
+Перед проведением проверяется, что:
+- проводок минимум две,
+- сумма `debit` равна сумме `credit`.
+
+Если всё ок, транзакция переводится в `posted`.
+
+---
+
+## Установка
+
+### 1. Клонировать репозиторий
+
+```bash
+git clone https://github.com/emilversiontwo/laravel-accounting-book.git
+cd laravel-accounting-book
+````
+
+### 2. Запустить установку
+
+```bash
+task setup
+```
+
+### 3. Миграции и сидеры
+
+```bash
+task dbfs
+```
+
+### 4. Настроить базу данных
+
+Пример для PostgreSQL:
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=laravel_accounting_book
+DB_USERNAME=postgres
+DB_PASSWORD=secret
+```
+
+### 6. Выполнить миграции
+
+```bash
+task artisan -- migrate
+```
+
+### 7. Заполнить тестовыми данными
+
+```bash
+task artisan -- db:seed
+```
+
+### 8. Запустить проект
+
+Обычный запуск:
+
+```bash
+task up
+```
+
+---
+
+## MoonShine
+
+Админка реализована через **MoonShine**.
+
+В ней доступны страницы для:
+
+* `AccountType`
+* `Account`
+* `Transaction`
+* `JournalEntry`
+
+Также реализованы:
+
+* экспорт транзакций
+* отчет по оборотам и остаткам за период
+
+---
+
+## Экспорт транзакций
+
+Из списка транзакций можно выгрузить данные:
+
+* в CSV
+* в Excel-совместимый формат
+
+Экспорт сделан через отдельный маршрут, который вызывает метод сервиса.
+
+---
+
+## Отчет “Оборотно-сальдовая ведомость”
+
+В проекте есть простой отчет за выбранный период.
+
+Он показывает:
+
+* остаток на начало периода
+* обороты за период
+* остаток на конец периода
+
+---
+
+## Структура проекта
+
+Примерно так:
+
+```text
+app/
+  Models/
+  Modules/
+    Transaction/
+      Services/
+      Exceptions/
+      Enums/
+  MoonShine/
+    Resources/
+      AccountType/
+      Account/
+      Transaction/
+      JournalEntry/
+      Pages/
+database/
+  migrations/
+  seeders/
+resources/
+  views/
+```
+
+---
+
+## Использование
+
+### Шаг 1
+
+Создаются типы счетов.
+
+### Шаг 2
+
+Создаются счета.
+
+### Шаг 3
+
+Создается транзакция в статусе `draft`.
+
+### Шаг 4
+
+К транзакции добавляются проводки.
+
+### Шаг 5
+
+Транзакция переводится в `posted`.
+
+---
+
+## Ограничения текущей версии
+
+* нет отдельного хранения остатков
+* нет сложной истории балансов
+* нет API
+* нет авторизации в бизнес-логике
+* нет многопользовательского сценария уровня production
+
+---
+
+## Что можно добавить дальше
+
+* хранение балансов счетов
+* историю изменений остатков
+* фильтры и аналитику по счетам
+* API
+* роли и права доступа
+* импорт проводок
+* более сложные бухгалтерские отчеты
+
+---
+
+## Зачем вообще этот проект
+
+Чтобы показать, как на Laravel можно собрать понятную и рабочую ledger-систему:
+
+* с двойной записью,
+* с админкой,
+* с отчетом,
+* с экспортом,
+* и без лишнего перегруза.
+
+---
+
+## Лицензия
+
+Проект учебный. Используйте, изучайте, дорабатывайте.

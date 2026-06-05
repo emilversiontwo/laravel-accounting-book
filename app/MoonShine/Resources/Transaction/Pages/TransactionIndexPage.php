@@ -6,6 +6,7 @@ namespace App\MoonShine\Resources\Transaction\Pages;
 
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Contracts\UI\ComponentContract;
+use MoonShine\UI\Components\ActionButton;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\QueryTags\QueryTag;
@@ -119,6 +120,9 @@ class TransactionIndexPage extends IndexPage
     protected function bottomLayer(): array
     {
         return [
+            ActionButton::make('Export CSV', route('moonshine.transactions.export', ['format' => 'csv'])),
+            ActionButton::make('Export Excel', route('moonshine.transactions.export', ['format' => 'xls'])),
+            ActionButton::make('Trial balance', route('moonshine.reports.turnover-balance')),
             ...parent::bottomLayer()
         ];
     }

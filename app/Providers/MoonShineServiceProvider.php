@@ -12,6 +12,10 @@ use MoonShine\Laravel\DependencyInjection\MoonShineConfigurator;
 use App\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
 use App\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource;
 use App\MoonShine\Resources\Account\AccountResource;
+use App\MoonShine\Resources\Transaction\TransactionResource;
+use App\MoonShine\Resources\JournalEntry\JournalEntryResource;
+use App\MoonShine\Resources\AccountBalanceSnapshot\AccountBalanceSnapshotResource;
+use App\MoonShine\Pages\TurnoverBalanceReportPage;
 
 class MoonShineServiceProvider extends ServiceProvider
 {
@@ -26,6 +30,8 @@ class MoonShineServiceProvider extends ServiceProvider
                 MoonShineUserRoleResource::class,
                 AccountTypeResource::class,
                 AccountResource::class,
+                TransactionResource::class,
+                JournalEntryResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),

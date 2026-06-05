@@ -12,7 +12,7 @@ use App\Modules\AccountType\Dto\AccountTypeUpdateDto;
 use App\Modules\AccountType\Enums\AccountTypeCategoryEnum;
 use App\Modules\AccountType\Enums\AccountTypeNormalBalanceSideEnum;
 use App\Modules\AccountType\Services\AccountTypeService;
-use Database\Seeders\AccountTypeSeeder;
+use Database\Seeders\TestAccountTypeSeeder;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
@@ -33,7 +33,7 @@ class AccountTypeServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(AccountTypeSeeder::class);
+        $this->seed(TestAccountTypeSeeder::class);
 
         $this->accountType = AccountType::query()->first();
 

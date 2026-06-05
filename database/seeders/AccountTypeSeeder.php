@@ -3,28 +3,41 @@
 namespace Database\Seeders;
 
 use App\Models\AccountType;
-use App\Modules\AccountType\Enums\AccountTypeCategoryEnum;
-use App\Modules\AccountType\Enums\AccountTypeNormalBalanceSideEnum;
 use Illuminate\Database\Seeder;
 
 class AccountTypeSeeder extends Seeder
 {
     public function run(): void
     {
-        AccountType::query()->truncate();
+        $types = [
+            [
+                'name' => 'Assets',
+                'category' => 'asset',
+                'normal_balance_side' => 'debit',
+                'allow_negative_balance' => false,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Revenue',
+                'category' => 'revenue',
+                'normal_balance_side' => 'credit',
+                'allow_negative_balance' => false,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Expenses',
+                'category' => 'expense',
+                'normal_balance_side' => 'debit',
+                'allow_negative_balance' => false,
+                'is_active' => true,
+            ],
+        ];
 
-        $accountType = new AccountType();
-
-        $accountType->name = 'TestAccountType';
-
-        $accountType->category = AccountTypeCategoryEnum::Asset->getValue();
-
-        $accountType->normal_balance_side = AccountTypeNormalBalanceSideEnum::Debit->getValue();
-
-        $accountType->allow_negative_balance = false;
-
-        $accountType->is_active = true;
-
-        $accountType->save();
+        foreach ($types as $type) {
+            AccountType::query()->updateOrCreate(
+                ['name' => $type['name']],
+                $type
+            );
+        }
     }
 }

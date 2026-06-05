@@ -11,8 +11,8 @@ use App\Modules\Account\Dto\AccountDto;
 use App\Modules\Account\Dto\AccountStoreDto;
 use App\Modules\Account\Dto\AccountUpdateDto;
 use App\Modules\Account\Services\AccountService;
-use Database\Seeders\AccountSeeder;
-use Database\Seeders\AccountTypeSeeder;
+use Database\Seeders\TestAccountSeeder;
+use Database\Seeders\TestAccountTypeSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -30,8 +30,8 @@ class AccountServiceTest extends TestCase
         parent::setUp();
 
         $this->seed([
-            AccountTypeSeeder::class,
-            AccountSeeder::class,
+            TestAccountTypeSeeder::class,
+            TestAccountSeeder::class,
         ]);
 
         $this->account = Account::query()->first();

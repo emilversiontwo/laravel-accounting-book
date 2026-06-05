@@ -18,6 +18,9 @@ class DatabaseSeeder extends Seeder
         if (app()->environment('local', 'develop', 'testing')){
             $this->call([
                 MoonShineUserSeeder::class,
+                AccountTypeSeeder::class,
+                AccountSeeder::class,
+                TransactionSeeder::class,
             ]);
         }
     }
